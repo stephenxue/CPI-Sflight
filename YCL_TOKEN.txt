@@ -1,0 +1,76 @@
+class YCL_TOKEN definition
+  public
+  final
+  create public .
+
+public section.
+
+  class-methods GENERATE
+    returning
+      value(RESULT) type STRING .
+  type-pools ABAP .
+  class-methods VALIDATE
+    importing
+      !TOKEN type STRING
+    returning
+      value(RESULT) type ABAP_BOOL .
+protected section.
+private section.
+ENDCLASS.
+
+
+
+CLASS YCL_TOKEN IMPLEMENTATION.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Public Method YCL_TOKEN=>GENERATE
+* +-------------------------------------------------------------------------------------------------+
+* | [<-()] RESULT                         TYPE        STRING
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+METHOD generate.
+  DATA tsl TYPE timestampl.
+  GET TIME STAMP FIELD tsl.
+  DATA time TYPE string.
+  time = tsl.
+  DATA gen TYPE string.
+  gen = time(11).
+
+*Encode String to Base64
+  CALL METHOD cl_http_utility=>if_http_utility~encode_base64
+    EXPORTING
+      unencoded = gen
+    RECEIVING
+      encoded   = result.
+ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Static Public Method YCL_TOKEN=>VALIDATE
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] TOKEN                          TYPE        STRING
+* | [<-()] RESULT                         TYPE        ABAP_BOOL
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+METHOD validate.
+  DATA:
+    lv_token type string.
+  CALL METHOD cl_http_utility=>if_http_utility~decode_base64
+      EXPORTING
+        encoded = token
+      RECEIVING
+        decoded = lv_token.
+
+  DATA tsl TYPE timestampl.
+  GET TIME STAMP FIELD tsl.
+  DATA time TYPE string.
+  time = tsl.
+  DATA gen TYPE string.
+  gen = time(11).
+
+  IF gen EQ lv_token.
+    result = abap_true.
+  ELSE.
+    result = abap_false.
+  ENDIF.
+ENDMETHOD.
+ENDCLASS.
