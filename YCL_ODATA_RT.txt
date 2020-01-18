@@ -1,0 +1,23 @@
+class YCL_ODATA_RT definition
+  public
+  inheriting from /IWBEP/CL_MGW_ABS_DATA
+  create public .
+
+public section.
+
+  types:
+    BEGIN OF gt_odata_provider,
+           entity_name     TYPE aco_string,
+           class_name      TYPE seoclsname,
+           class_instatnce TYPE REF TO ycl_odata_rt,
+         END OF gt_odata_provider .
+  types:
+    gtt_odata_provider TYPE TABLE OF gt_odata_provider .
+protected section.
+private section.
+ENDCLASS.
+
+
+
+CLASS YCL_ODATA_RT IMPLEMENTATION.
+ENDCLASS.

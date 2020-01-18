@@ -1,0 +1,95 @@
+class YCL_ODATA_SFLIGHT definition
+  public
+  inheriting from YCL_ODATA_DEMO01
+  final
+  create public .
+
+public section.
+
+  methods /IWBEP/IF_MGW_APPL_SRV_RUNTIME~GET_ENTITYSET
+    redefinition .
+protected section.
+private section.
+ENDCLASS.
+
+
+
+CLASS YCL_ODATA_SFLIGHT IMPLEMENTATION.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Public Method YCL_ODATA_SFLIGHT->/IWBEP/IF_MGW_APPL_SRV_RUNTIME~GET_ENTITYSET
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] IV_ENTITY_NAME                 TYPE        STRING(optional)
+* | [--->] IV_ENTITY_SET_NAME             TYPE        STRING(optional)
+* | [--->] IV_SOURCE_NAME                 TYPE        STRING(optional)
+* | [--->] IT_FILTER_SELECT_OPTIONS       TYPE        /IWBEP/T_MGW_SELECT_OPTION(optional)
+* | [--->] IT_ORDER                       TYPE        /IWBEP/T_MGW_SORTING_ORDER(optional)
+* | [--->] IS_PAGING                      TYPE        /IWBEP/S_MGW_PAGING(optional)
+* | [--->] IT_NAVIGATION_PATH             TYPE        /IWBEP/T_MGW_NAVIGATION_PATH(optional)
+* | [--->] IT_KEY_TAB                     TYPE        /IWBEP/T_MGW_NAME_VALUE_PAIR(optional)
+* | [--->] IV_FILTER_STRING               TYPE        STRING(optional)
+* | [--->] IV_SEARCH_STRING               TYPE        STRING(optional)
+* | [--->] IO_TECH_REQUEST_CONTEXT        TYPE REF TO /IWBEP/IF_MGW_REQ_ENTITYSET(optional)
+* | [<---] ER_ENTITYSET                   TYPE REF TO DATA
+* | [<---] ES_RESPONSE_CONTEXT            TYPE        /IWBEP/IF_MGW_APPL_SRV_RUNTIME=>TY_S_MGW_RESPONSE_CONTEXT
+* | [!CX!] /IWBEP/CX_MGW_BUSI_EXCEPTION
+* | [!CX!] /IWBEP/CX_MGW_TECH_EXCEPTION
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+METHOD /iwbep/if_mgw_appl_srv_runtime~get_entityset.
+**TRY.
+*CALL METHOD SUPER->/IWBEP/IF_MGW_APPL_SRV_RUNTIME~GET_ENTITYSET
+**  EXPORTING
+**    IV_ENTITY_NAME           =
+**    IV_ENTITY_SET_NAME       =
+**    IV_SOURCE_NAME           =
+**    IT_FILTER_SELECT_OPTIONS =
+**    IT_ORDER                 =
+**    IS_PAGING                =
+**    IT_NAVIGATION_PATH       =
+**    IT_KEY_TAB               =
+**    IV_FILTER_STRING         =
+**    IV_SEARCH_STRING         =
+**    IO_TECH_REQUEST_CONTEXT  =
+**  IMPORTING
+**    ER_ENTITYSET             =
+**    ES_RESPONSE_CONTEXT      =
+*    .
+** CATCH /IWBEP/CX_MGW_BUSI_EXCEPTION .
+** CATCH /IWBEP/CX_MGW_TECH_EXCEPTION .
+**ENDTRY.
+  DATA:
+    lt_r_carrid  TYPE RANGE OF s_carr_id,
+    lt_filters   TYPE /iwbep/t_mgw_select_option,
+    lt_entityset TYPE ycl_ygw_sflight_mpc=>tt_sflight.
+  FIELD-SYMBOLS:
+    <ls_filter>        TYPE /iwbep/s_mgw_select_option,
+    <ls_select_option> TYPE /iwbep/s_cod_select_option,
+    <ls_r_carrid>      LIKE LINE OF lt_r_carrid.
+  lt_filters = io_tech_request_context->get_filter( )->get_filter_select_options( ).
+
+  IF NOT lt_filters[] IS INITIAL.
+* Derive search conditions
+    READ TABLE lt_filters ASSIGNING <ls_filter> WITH KEY property = 'CARRID'.
+    IF sy-subrc EQ 0.
+      LOOP AT <ls_filter>-select_options[] ASSIGNING <ls_select_option>.
+        APPEND INITIAL LINE TO lt_r_carrid ASSIGNING <ls_r_carrid>.
+        MOVE-CORRESPONDING <ls_select_option> TO <ls_r_carrid>.
+      ENDLOOP.
+    ENDIF.
+  ENDIF.
+* Read DB table
+  SELECT *
+    FROM sflight
+    INTO TABLE lt_entityset
+   WHERE carrid IN lt_r_carrid.
+  IF sy-subrc EQ 0.
+    /iwbep/if_mgw_conv_srv_runtime~copy_data_to_ref(
+      EXPORTING
+        is_data = lt_entityset
+      CHANGING
+        cr_data = er_entityset
+    ).
+  ENDIF.
+ENDMETHOD.
+ENDCLASS.

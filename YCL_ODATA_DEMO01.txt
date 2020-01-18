@@ -1,0 +1,14 @@
+class YCL_ODATA_DEMO01 definition
+  public
+  inheriting from YCL_ODATA_RT
+  create public .
+
+public section.
+protected section.
+private section.
+ENDCLASS.
+
+
+
+CLASS YCL_ODATA_DEMO01 IMPLEMENTATION.
+ENDCLASS.
